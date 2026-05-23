@@ -1,6 +1,6 @@
 # Render Blueprint — deploys Habitly as a free Node web service.
 # In Render: New → Blueprint → connect this repo. Render reads this file,
-# auto-generates JWT_SECRET, and only asks you for MONGODB_URI.
+# auto-generates JWT_SECRET, and asks you for the two Supabase values.
 services:
   - type: web
     name: habitly
@@ -10,8 +10,10 @@ services:
     startCommand: npm start
     healthCheckPath: /login
     envVars:
-      - key: MONGODB_URI
-        sync: false # you paste your MongoDB Atlas connection string
+      - key: SUPABASE_URL
+        sync: false # Supabase → Project Settings → API → Project URL
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Supabase → Project Settings → API → service_role secret
       - key: JWT_SECRET
         generateValue: true # Render generates a secure random value
       - key: COOKIE_SECURE

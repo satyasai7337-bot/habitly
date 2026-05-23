@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import HabitLog from "@/models/HabitLog";
 import { getSessionUser } from "@/lib/auth";
+import { getLogsByDates } from "@/lib/store";
 import { rangeForPeriod } from "@/lib/dates";
 import { aggregateByDate, buildSeries, adherence } from "@/lib/stats";
 
@@ -15,11 +14,7 @@ export async function GET(req) {
   const period = searchParams.get("period") === "month" ? "month" : "week";
   const dayKeys = rangeForPeriod(period);
 
-  await connectDB();
-  const logs = await HabitLog.find({
-    user: user.id,
-    date: { $in: dayKeys },
-  }).lean();
+  const logs = await getLogsByDates(user.id, dayKeys);
 
   const byHabit = {};
   for (const l of logs) (byHabit[l.habitKey] ||= []).push(l);

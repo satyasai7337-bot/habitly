@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
 import { getSessionUser, sanitizeUser } from "@/lib/auth";
+import { updateUserHabits } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -15,11 +14,8 @@ export async function PATCH(req) {
   try {
     const { habitKey, target, reminderTimes, reminderEnabled } = await req.json();
 
-    await connectDB();
-    const user = await User.findById(session.id);
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-    const habit = user.habits.find((h) => h.key === habitKey);
+    const habits = session.habits.map((h) => ({ ...h }));
+    const habit = habits.find((h) => h.key === habitKey);
     if (!habit) return NextResponse.json({ error: "Habit not tracked" }, { status: 400 });
 
     if (target !== undefined) {
@@ -29,16 +25,15 @@ export async function PATCH(req) {
 
     if (habit.type === "good") {
       if (Array.isArray(reminderTimes)) {
-        const clean = [...new Set(reminderTimes.filter((t) => TIME_RE.test(t)))].sort();
-        habit.reminderTimes = clean;
+        habit.reminderTimes = [...new Set(reminderTimes.filter((t) => TIME_RE.test(t)))].sort();
       }
       if (typeof reminderEnabled === "boolean") {
         habit.reminderEnabled = reminderEnabled;
       }
     }
 
-    await user.save();
-    return NextResponse.json({ user: sanitizeUser(user.toObject()) });
+    const user = await updateUserHabits(session.id, habits);
+    return NextResponse.json({ user: sanitizeUser(user) });
   } catch (err) {
     console.error("settings error:", err);
     return NextResponse.json({ error: "Could not update settings." }, { status: 500 });

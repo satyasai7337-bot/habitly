@@ -6,7 +6,7 @@ A habit-tracking web app. Track the **good habits** that build your health
 with graphs, in-app reminders for good habits, AI coaching, a monthly score
 and an earnable certificate.
 
-Built with **Next.js (App Router)**, **MongoDB/Mongoose**, **Tailwind CSS**,
+Built with **Next.js (App Router)**, **Supabase (PostgreSQL)**, **Tailwind CSS**,
 and **Google Gemini** (AI tips).
 
 ---
@@ -22,15 +22,14 @@ and **Google Gemini** (AI tips).
 | Gen-Z, clean UI with plain (non-neon) colors | ✅ |
 | Daily targets per habit (6 L water, 3 meals, 8 h sleep, …) — editable | ✅ |
 | Monthly score + earnable, printable certificate | ✅ |
-| MongoDB database | ✅ |
+| Supabase (PostgreSQL) database | ✅ |
 
 ---
 
 ## Prerequisites
 
 - **Node.js 18+** (tested on Node 24)
-- **MongoDB** running locally at `mongodb://127.0.0.1:27017`
-  (the included Windows MongoDB service works out of the box)
+- A free **Supabase** project (<https://supabase.com>)
 
 ## Setup
 
@@ -38,17 +37,23 @@ and **Google Gemini** (AI tips).
 npm install
 ```
 
-Configuration lives in **`.env.local`** (already created). Key values:
+**1. Create the database tables.** In the Supabase dashboard → **SQL Editor** →
+paste the contents of [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
+
+**2. Configure `.env.local`:**
 
 ```ini
-MONGODB_URI=mongodb://127.0.0.1:27017/habit_tracker
-JWT_SECRET=<change me to a long random string>
+# Supabase → Project Settings → API
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret   # keep private!
+
+JWT_SECRET=<a long random string>
 
 # AI tips — optional. Without a key the app uses smart built-in suggestions.
-GEMINI_API_KEY=            # get one at https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-1.5-flash
 
-COOKIE_SECURE=false        # set true ONLY when deployed over HTTPS
+COOKIE_SECURE=false        # set true ONLY when served over HTTPS
 ```
 
 Reminders are shown **in-app** (on the dashboard) — no email/SMTP setup needed.
@@ -72,10 +77,12 @@ Bad habits never get reminders, by design.
 
 ```
 app/
-  page.js                 Landing page
+  page.js                 Landing page (redirects to /login or /dashboard)
+  welcome/                Marketing landing page
   login/  signup/         Auth pages
   dashboard/              Dashboard (server guard → <Dashboard/>)
   reports/                Weekly/monthly reports (server guard → <Reports/>)
+  certificate/            Earnable monthly certificate (printable)
   api/
     auth/                 signup, login, logout, me
     logs/                 add/list habit entries
@@ -84,11 +91,11 @@ app/
     reminders/due         in-app due reminders (records + returns pending)
     reports/              weekly/monthly aggregation
     ai/suggestions        Gemini (or fallback) tips
-  certificate/            earnable monthly certificate (printable)
 components/               Dashboard, HabitCard, Reminders, Reports, Charts,
                           AISuggestions, ThoughtOfDay, PrintButton, TopNav, Brand
-lib/                      habits catalog, db, auth, dates, stats, ai, thoughts
-models/                   User, HabitLog, ReminderLog (Mongoose)
+lib/                      supabase (client), store (data access), auth, habits,
+                          dates, stats, ai, thoughts
+supabase/schema.sql       PostgreSQL tables (users, habit_logs, reminder_logs)
 ```
 
 ## How habits work
@@ -102,30 +109,22 @@ Log entries throughout the day; multiple entries are summed per day.
 
 ---
 
-## Deploy (Vercel + MongoDB Atlas)
+## Deploy (Render + Supabase)
 
-The app is serverless-ready (no background worker; reminders are in-app). It
-needs a **cloud database** since local MongoDB isn't reachable from the host.
+The app runs as a single Node web service — no background worker (reminders are
+in-app). The database is Supabase, so it works the same locally and in the cloud.
 
-**1. Create a free MongoDB Atlas database**
-1. Sign up at <https://www.mongodb.com/cloud/atlas/register> and create a free
-   **M0** cluster.
-2. **Database Access** → add a user (username + password).
-3. **Network Access** → add IP `0.0.0.0/0` (allow from anywhere) so Vercel can connect.
-4. **Connect → Drivers** → copy the connection string. It looks like:
-   `mongodb+srv://USER:PASSWORD@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority`
-   Add the database name before the `?`:
-   `mongodb+srv://USER:PASSWORD@cluster0.xxxx.mongodb.net/habit_tracker?retryWrites=true&w=majority`
+**1. Set up Supabase**
+1. Create a project at <https://supabase.com>.
+2. **SQL Editor** → run [`supabase/schema.sql`](supabase/schema.sql).
+3. **Project Settings → API** → copy the **Project URL** and the **service_role** key.
 
-**2. Deploy on Vercel**
-1. Go to <https://vercel.com/new>, sign in with GitHub, and import the
-   `habitly` repository.
-2. Framework preset auto-detects **Next.js** — leave build settings as-is.
-3. Add **Environment Variables**:
-   | Name | Value |
-   |------|-------|
-   | `MONGODB_URI` | your Atlas connection string (with `/habit_tracker`) |
-   | `JWT_SECRET` | a long random string |
-   | `COOKIE_SECURE` | `true` |
-   | `GEMINI_API_KEY` | *(optional)* your Gemini key |
-4. Click **Deploy**. Your app will be live at `https://habitly-xxxx.vercel.app`.
+**2. Deploy on Render (Blueprint)**
+1. Open <https://render.com/deploy?repo=https://github.com/satyasai7337-bot/habitly>
+   (or Render → **New → Blueprint** → pick the repo). Render reads `render.yaml`.
+2. It auto-generates `JWT_SECRET`; you provide:
+   | Variable | Value |
+   |----------|-------|
+   | `SUPABASE_URL` | your Supabase Project URL |
+   | `SUPABASE_SERVICE_ROLE_KEY` | your Supabase service_role secret |
+3. Click **Apply**. Your app goes live at `https://habitly-xxxx.onrender.com`.

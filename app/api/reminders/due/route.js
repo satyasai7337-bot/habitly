@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
-import HabitLog from "@/models/HabitLog";
-import ReminderLog from "@/models/ReminderLog";
 import { getSessionUser } from "@/lib/auth";
+import { getLogsByDates, getReminderLogsForDate, insertReminderLogs } from "@/lib/store";
 import { todayKey } from "@/lib/dates";
+import { aggregateByDate } from "@/lib/stats";
 
 export const runtime = "nodejs";
 
@@ -15,7 +13,6 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  await connectDB();
   const today = todayKey();
   const now = new Date();
   const curSlot = `${String(now.getHours()).padStart(2, "0")}:${String(
@@ -23,14 +20,17 @@ export async function GET() {
   ).padStart(2, "0")}`;
 
   // Today's logged totals per habit.
-  const agg = await HabitLog.aggregate([
-    { $match: { user: oid(user.id), date: today } },
-    { $group: { _id: "$habitKey", total: { $sum: "$value" } } },
-  ]);
-  const totals = Object.fromEntries(agg.map((a) => [a._id, a.total]));
+  const logs = await getLogsByDates(user.id, [today]);
+  const byHabit = {};
+  for (const l of logs) (byHabit[l.habitKey] ||= []).push(l);
+  const totals = {};
+  for (const h of user.habits) {
+    const map = aggregateByDate(byHabit[h.key] || []);
+    totals[h.key] = map[today] || 0;
+  }
 
   // Reminders already recorded today.
-  const existing = await ReminderLog.find({ user: user.id, date: today }).lean();
+  const existing = await getReminderLogsForDate(user.id, today);
   const seen = new Set(existing.map((r) => `${r.habitKey}|${r.slot}`));
 
   // Record any newly-due slots.
@@ -39,24 +39,16 @@ export async function GET() {
     if (h.type !== "good" || h.reminderEnabled === false) continue;
     for (const slot of h.reminderTimes || []) {
       if (slot <= curSlot && !seen.has(`${h.key}|${slot}`)) {
-        toCreate.push({
-          user: user.id,
-          habitKey: h.key,
-          slot,
-          date: today,
-          channel: "app",
-          status: "shown",
-          sentAt: new Date(),
-        });
+        toCreate.push({ user: user.id, habitKey: h.key, slot, date: today });
         seen.add(`${h.key}|${slot}`);
       }
     }
   }
   if (toCreate.length) {
     try {
-      await ReminderLog.insertMany(toCreate, { ordered: false });
-    } catch {
-      // unique-index race on a duplicate slot — safe to ignore
+      await insertReminderLogs(toCreate);
+    } catch (e) {
+      console.error("reminder insert error:", e?.message || e);
     }
   }
 
@@ -89,8 +81,4 @@ export async function GET() {
     newCount: toCreate.length,
     serverSlot: curSlot,
   });
-}
-
-function oid(id) {
-  return new mongoose.Types.ObjectId(id);
 }

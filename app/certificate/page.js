@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
-import HabitLog from "@/models/HabitLog";
+import { getLogsByDates } from "@/lib/store";
 import { rangeForPeriod } from "@/lib/dates";
 import {
   aggregateByDate,
@@ -29,9 +28,8 @@ export default async function CertificatePage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  await connectDB();
   const dayKeys = rangeForPeriod("month");
-  const logs = await HabitLog.find({ user: user.id, date: { $in: dayKeys } }).lean();
+  const logs = await getLogsByDates(user.id, dayKeys);
 
   const byHabit = {};
   for (const l of logs) (byHabit[l.habitKey] ||= []).push(l);

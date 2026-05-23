@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
-import HabitLog from "@/models/HabitLog";
-import ReminderLog from "@/models/ReminderLog";
 import { getSessionUser } from "@/lib/auth";
+import { getLogsByDates, countRemindersByHabitForDate } from "@/lib/store";
 import { lastNDays, todayKey } from "@/lib/dates";
 import { aggregateByDate, buildSeries, habitProgress, nextReminder } from "@/lib/stats";
 
@@ -13,28 +10,18 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  await connectDB();
   const days7 = lastNDays(7);
   const today = todayKey();
 
-  const logs = await HabitLog.find({
-    user: user.id,
-    date: { $in: days7 },
-  }).lean();
+  const logs = await getLogsByDates(user.id, days7);
 
   // group logs by habit
   const byHabit = {};
-  for (const l of logs) {
-    (byHabit[l.habitKey] ||= []).push(l);
-  }
+  for (const l of logs) (byHabit[l.habitKey] ||= []).push(l);
 
   // reminders shown per habit (today)
-  const reminderCounts = await ReminderLog.aggregate([
-    { $match: { user: toObjectId(user.id), date: today } },
-    { $group: { _id: "$habitKey", n: { $sum: 1 } } },
-  ]);
-  const remByHabit = Object.fromEntries(reminderCounts.map((r) => [r._id, r.n]));
-  const totalRemindersSent = reminderCounts.reduce((s, r) => s + r.n, 0);
+  const remByHabit = await countRemindersByHabitForDate(user.id, today);
+  const totalRemindersSent = Object.values(remByHabit).reduce((s, n) => s + n, 0);
 
   const habits = user.habits.map((h) => {
     const map = aggregateByDate(byHabit[h.key] || []);
@@ -53,8 +40,4 @@ export async function GET() {
     nextReminder: nextReminder(user.habits),
     totalRemindersSent,
   });
-}
-
-function toObjectId(id) {
-  return new mongoose.Types.ObjectId(id);
 }

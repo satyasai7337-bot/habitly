@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
-import HabitLog from "@/models/HabitLog";
 import { getSessionUser } from "@/lib/auth";
+import { createLog, sumForHabitDate, getRecentLogs } from "@/lib/store";
 import { todayKey, dateKey } from "@/lib/dates";
 
 export const runtime = "nodejs";
@@ -23,22 +21,9 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid value." }, { status: 400 });
     }
 
-    await connectDB();
     const day = date ? dateKey(new Date(date)) : todayKey();
-
-    await HabitLog.create({
-      user: user.id,
-      habitKey,
-      date: day,
-      value: num,
-      note: note || "",
-    });
-
-    const agg = await HabitLog.aggregate([
-      { $match: { user: toObjectId(user.id), habitKey, date: day } },
-      { $group: { _id: null, total: { $sum: "$value" } } },
-    ]);
-    const todayTotal = agg[0]?.total || 0;
+    await createLog({ userId: user.id, habitKey, date: day, value: num, note });
+    const todayTotal = await sumForHabitDate(user.id, habitKey, day);
 
     return NextResponse.json({ ok: true, habitKey, date: day, todayTotal });
   } catch (err) {
@@ -54,22 +39,6 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const habitKey = searchParams.get("habitKey");
-  await connectDB();
-  const q = { user: user.id };
-  if (habitKey) q.habitKey = habitKey;
-  const logs = await HabitLog.find(q).sort({ createdAt: -1 }).limit(50).lean();
-  return NextResponse.json({
-    logs: logs.map((l) => ({
-      id: String(l._id),
-      habitKey: l.habitKey,
-      date: l.date,
-      value: l.value,
-      note: l.note,
-      createdAt: l.createdAt,
-    })),
-  });
-}
-
-function toObjectId(id) {
-  return new mongoose.Types.ObjectId(id);
+  const logs = await getRecentLogs(user.id, habitKey);
+  return NextResponse.json({ logs });
 }

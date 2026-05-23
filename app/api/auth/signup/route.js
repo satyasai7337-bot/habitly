@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import { getUserByEmail, createUser } from "@/lib/store";
 import { hashPassword, signToken, cookieOptions, COOKIE_NAME, sanitizeUser } from "@/lib/auth";
 import { snapshotHabit } from "@/lib/habits";
 
@@ -41,9 +40,7 @@ export async function POST(req) {
       );
     }
 
-    await connectDB();
-
-    const exists = await User.findOne({ email: String(email).toLowerCase() });
+    const exists = await getUserByEmail(String(email).toLowerCase());
     if (exists) {
       return NextResponse.json(
         { error: "An account with this email already exists." },
@@ -51,9 +48,7 @@ export async function POST(req) {
       );
     }
 
-    const habitConfigs = habits
-      .map((k) => snapshotHabit(k))
-      .filter(Boolean);
+    const habitConfigs = habits.map((k) => snapshotHabit(k)).filter(Boolean);
 
     // Apply user-entered reminder times for good habits (override defaults).
     const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -69,7 +64,7 @@ export async function POST(req) {
 
     const passwordHash = await hashPassword(password);
 
-    const user = await User.create({
+    const user = await createUser({
       name,
       phone,
       email: String(email).toLowerCase(),
@@ -77,12 +72,12 @@ export async function POST(req) {
       bodyWeight: numOrNull(bodyWeight),
       height: numOrNull(height),
       age: numOrNull(age),
-      sex: ["male", "female", "other"].includes(sex) ? sex : undefined,
+      sex: ["male", "female", "other"].includes(sex) ? sex : null,
       habits: habitConfigs,
     });
 
-    const token = signToken(user._id);
-    const res = NextResponse.json({ user: sanitizeUser(user.toObject()) });
+    const token = signToken(user.id);
+    const res = NextResponse.json({ user: sanitizeUser(user) });
     res.cookies.set(COOKIE_NAME, token, cookieOptions);
     return res;
   } catch (err) {
@@ -92,7 +87,7 @@ export async function POST(req) {
 }
 
 function numOrNull(v) {
-  if (v === "" || v === null || v === undefined) return undefined;
+  if (v === "" || v === null || v === undefined) return null;
   const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
+  return Number.isFinite(n) ? n : null;
 }
