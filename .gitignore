@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+.env
+.env.local
+.env*.local
+npm-debug.log*
+*.pem
+.DS_Store
+
+# generated sample artifact
+certificate.png
+
+# local Claude Code settings
+.claude/settings.local.json

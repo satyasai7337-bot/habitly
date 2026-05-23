@@ -1,0 +1,120 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import HabitCard from "@/components/HabitCard";
+import AISuggestions from "@/components/AISuggestions";
+import ThoughtOfDay from "@/components/ThoughtOfDay";
+import Reminders from "@/components/Reminders";
+
+export default function Dashboard({ user }) {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  // Computed after mount to avoid a server/client locale hydration mismatch.
+  const [today, setToday] = useState("");
+
+  useEffect(() => {
+    setToday(
+      new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+      })
+    );
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/habits/summary", { cache: "no-store" });
+      if (res.ok) setSummary(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const habits = summary?.habits || [];
+  const good = habits.filter((h) => h.type === "good");
+  const bad = habits.filter((h) => h.type === "bad");
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
+            Hey {user.name.split(" ")[0]} 👋
+          </h1>
+          <p className="text-sm text-ink/60">
+            {today ? `${today} · ` : ""}here&apos;s your day
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <StatChip label="Next reminder" value={nextReminderText(summary?.nextReminder)} />
+          <StatChip label="Reminders today" value={summary ? String(summary.totalRemindersSent) : "—"} />
+        </div>
+      </div>
+
+      {/* Thought of the day */}
+      <ThoughtOfDay />
+
+      {/* In-app reminders */}
+      <Reminders onChanged={refresh} />
+
+      {/* AI */}
+      <div className="mb-8">
+        <AISuggestions />
+      </div>
+
+      {loading && <p className="text-sm text-ink/50">Loading your habits…</p>}
+
+      {/* Good habits */}
+      {good.length > 0 && (
+        <section className="mb-10">
+          <h2 className="mb-3 font-display text-xl font-bold text-ink">
+            ✅ Good habits <span className="text-sm font-medium text-ink/40">— keep building</span>
+          </h2>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {good.map((h) => (
+              <HabitCard key={h.key} habit={h} onChanged={refresh} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Bad habits */}
+      {bad.length > 0 && (
+        <section className="mb-10">
+          <h2 className="mb-3 font-display text-xl font-bold text-ink">
+            🛑 Habits to prevent <span className="text-sm font-medium text-ink/40">— track & reduce</span>
+          </h2>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {bad.map((h) => (
+              <HabitCard key={h.key} habit={h} onChanged={refresh} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!loading && habits.length === 0 && (
+        <p className="text-sm text-ink/50">No habits selected yet.</p>
+      )}
+    </main>
+  );
+}
+
+function StatChip({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-line bg-white px-4 py-2 shadow-soft">
+      <div className="text-xs font-medium text-ink/50">{label}</div>
+      <div className="font-display font-bold text-ink">{value}</div>
+    </div>
+  );
+}
+
+function nextReminderText(nr) {
+  if (!nr) return "—";
+  return `${nr.emoji} ${nr.slot}`;
+}
