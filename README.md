@@ -99,3 +99,33 @@ models/                   User, HabitLog, ReminderLog (Mongoose)
   tracking, trend graphs and a "why prevent…" consequence — but **no reminders**.
 
 Log entries throughout the day; multiple entries are summed per day.
+
+---
+
+## Deploy (Vercel + MongoDB Atlas)
+
+The app is serverless-ready (no background worker; reminders are in-app). It
+needs a **cloud database** since local MongoDB isn't reachable from the host.
+
+**1. Create a free MongoDB Atlas database**
+1. Sign up at <https://www.mongodb.com/cloud/atlas/register> and create a free
+   **M0** cluster.
+2. **Database Access** → add a user (username + password).
+3. **Network Access** → add IP `0.0.0.0/0` (allow from anywhere) so Vercel can connect.
+4. **Connect → Drivers** → copy the connection string. It looks like:
+   `mongodb+srv://USER:PASSWORD@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority`
+   Add the database name before the `?`:
+   `mongodb+srv://USER:PASSWORD@cluster0.xxxx.mongodb.net/habit_tracker?retryWrites=true&w=majority`
+
+**2. Deploy on Vercel**
+1. Go to <https://vercel.com/new>, sign in with GitHub, and import the
+   `habitly` repository.
+2. Framework preset auto-detects **Next.js** — leave build settings as-is.
+3. Add **Environment Variables**:
+   | Name | Value |
+   |------|-------|
+   | `MONGODB_URI` | your Atlas connection string (with `/habit_tracker`) |
+   | `JWT_SECRET` | a long random string |
+   | `COOKIE_SECURE` | `true` |
+   | `GEMINI_API_KEY` | *(optional)* your Gemini key |
+4. Click **Deploy**. Your app will be live at `https://habitly-xxxx.vercel.app`.
