@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUserByEmail, createUser } from "@/lib/store";
 import { hashPassword, signToken, cookieOptions, COOKIE_NAME, sanitizeUser } from "@/lib/auth";
 import { snapshotHabit } from "@/lib/habits";
+import { predictTarget } from "@/lib/ml/targetModel";
 
 export const runtime = "nodejs";
 
@@ -62,6 +63,21 @@ export async function POST(req) {
       }
     }
 
+    const bodyWeightNum = numOrNull(bodyWeight);
+    const heightNum = numOrNull(height);
+    const ageNum = numOrNull(age);
+    const sexVal = ["male", "female", "other"].includes(sex) ? sex : null;
+
+    // Personalize good-habit targets from the profile via the trained models.
+    // Only when the full profile is present, otherwise keep catalog defaults.
+    if (bodyWeightNum != null && heightNum != null && ageNum != null && sexVal) {
+      const profile = { age: ageNum, sex: sexVal, bodyWeight: bodyWeightNum, height: heightNum };
+      for (const cfg of habitConfigs) {
+        const t = predictTarget(profile, cfg.key); // null for unmodeled habits
+        if (t != null) cfg.target = t;
+      }
+    }
+
     const passwordHash = await hashPassword(password);
 
     const user = await createUser({
@@ -69,10 +85,10 @@ export async function POST(req) {
       phone,
       email: String(email).toLowerCase(),
       passwordHash,
-      bodyWeight: numOrNull(bodyWeight),
-      height: numOrNull(height),
-      age: numOrNull(age),
-      sex: ["male", "female", "other"].includes(sex) ? sex : null,
+      bodyWeight: bodyWeightNum,
+      height: heightNum,
+      age: ageNum,
+      sex: sexVal,
       habits: habitConfigs,
     });
 

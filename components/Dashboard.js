@@ -9,6 +9,8 @@ import Reminders from "@/components/Reminders";
 export default function Dashboard({ user }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Model-recommended targets, keyed by habit: { water: 3, sleep: 8, ... }.
+  const [recommended, setRecommended] = useState({});
   // Computed after mount to avoid a server/client locale hydration mismatch.
   const [today, setToday] = useState("");
 
@@ -34,6 +36,22 @@ export default function Dashboard({ user }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Load personalized target recommendations once. Only kept when the user's
+  // profile is complete, so we never show defaults-from-average as "suggested".
+  useEffect(() => {
+    fetch("/api/ai/targets", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.profileComplete) return;
+        const map = {};
+        for (const r of d.recommendations || []) {
+          if (r.personalized) map[r.key] = r.recommendedTarget;
+        }
+        setRecommended(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const habits = summary?.habits || [];
   const good = habits.filter((h) => h.type === "good");
@@ -78,7 +96,7 @@ export default function Dashboard({ user }) {
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {good.map((h) => (
-              <HabitCard key={h.key} habit={h} onChanged={refresh} />
+              <HabitCard key={h.key} habit={h} onChanged={refresh} recommended={recommended[h.key]} />
             ))}
           </div>
         </section>

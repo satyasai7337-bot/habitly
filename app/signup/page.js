@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import { GOOD_HABITS, BAD_HABITS } from "@/lib/habits";
+import { predictTarget, MODELED_HABITS } from "@/lib/ml/targetModel";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -57,6 +58,21 @@ export default function SignupPage() {
   }
 
   const selectedGoodHabits = GOOD_HABITS.filter((h) => selected.includes(h.key));
+
+  // Once the profile is complete, the trained models personalize each good
+  // habit's goal live (the model is pure JS, so it runs right here in the form).
+  const profileComplete =
+    form.age !== "" && form.sex !== "" && form.bodyWeight !== "" && form.height !== "";
+  const recommended = useMemo(() => {
+    if (!profileComplete) return {};
+    const profile = {
+      age: form.age,
+      sex: form.sex,
+      bodyWeight: form.bodyWeight,
+      height: form.height,
+    };
+    return Object.fromEntries(MODELED_HABITS.map((k) => [k, predictTarget(profile, k)]));
+  }, [profileComplete, form.age, form.sex, form.bodyWeight, form.height]);
 
   async function submit(e) {
     e.preventDefault();
@@ -138,9 +154,21 @@ export default function SignupPage() {
             </p>
 
             <h3 className="mb-2 mt-2 text-sm font-semibold text-good">Good habits — to build</h3>
+            {profileComplete && (
+              <p className="mb-2 text-xs font-medium text-accent">
+                ✨ Goals below are personalized to your details.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {GOOD_HABITS.map((h) => (
-                <HabitToggle key={h.key} habit={h} active={selected.includes(h.key)} onClick={() => toggleHabit(h.key)} good />
+                <HabitToggle
+                  key={h.key}
+                  habit={h}
+                  active={selected.includes(h.key)}
+                  onClick={() => toggleHabit(h.key)}
+                  good
+                  recommended={recommended[h.key]}
+                />
               ))}
             </div>
 
@@ -252,7 +280,9 @@ function ReminderRow({ habit, times, onAdd, onRemove }) {
   );
 }
 
-function HabitToggle({ habit, active, onClick, good }) {
+function HabitToggle({ habit, active, onClick, good, recommended }) {
+  const personalized = good && recommended != null;
+  const goal = personalized ? recommended : habit.target;
   return (
     <button
       type="button"
@@ -268,7 +298,9 @@ function HabitToggle({ habit, active, onClick, good }) {
       <span className="text-xl">{habit.emoji}</span>
       <span className="mt-1 text-sm font-semibold text-ink">{habit.label}</span>
       <span className="text-xs text-ink/50">
-        {habit.type === "good" ? `goal ${habit.target} ${habit.unit}` : `aim for 0 ${habit.unit}`}
+        {habit.type === "good"
+          ? `${personalized ? "✨ " : ""}goal ${goal} ${habit.unit}`
+          : `aim for 0 ${habit.unit}`}
       </span>
       {active && (
         <span

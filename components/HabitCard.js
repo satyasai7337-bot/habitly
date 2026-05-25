@@ -6,7 +6,7 @@ import { MiniArea } from "@/components/Charts";
 const GOOD_COLOR = "#3f8f5c";
 const BAD_COLOR = "#c2554d";
 
-export default function HabitCard({ habit, onChanged }) {
+export default function HabitCard({ habit, onChanged, recommended }) {
   const good = habit.type === "good";
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -132,13 +132,19 @@ export default function HabitCard({ habit, onChanged }) {
       </div>
 
       {showSettings && (
-        <Settings habit={habit} good={good} onChanged={onChanged} close={() => setShowSettings(false)} />
+        <Settings
+          habit={habit}
+          good={good}
+          recommended={recommended}
+          onChanged={onChanged}
+          close={() => setShowSettings(false)}
+        />
       )}
     </div>
   );
 }
 
-function Settings({ habit, good, onChanged, close }) {
+function Settings({ habit, good, recommended, onChanged, close }) {
   const [target, setTarget] = useState(habit.target);
   const [enabled, setEnabled] = useState(habit.reminderEnabled !== false);
   const [times, setTimes] = useState(habit.reminderTimes || []);
@@ -183,6 +189,21 @@ function Settings({ habit, good, onChanged, close }) {
           onChange={(e) => setTarget(e.target.value)}
           className="input py-2"
         />
+        {recommended != null && (
+          <div className="mt-2 flex items-center justify-between rounded-xl bg-accent-soft px-3 py-2 text-sm text-accent">
+            <span>
+              ✨ Suggested for you: <b>{recommended} {habit.unit}</b>
+            </span>
+            <button
+              type="button"
+              onClick={() => setTarget(recommended)}
+              disabled={Number(target) === recommended}
+              className="btn-ghost px-2 py-1 text-xs disabled:opacity-50"
+            >
+              {Number(target) === recommended ? "In use" : "Use"}
+            </button>
+          </div>
+        )}
       </div>
 
       {good && (
