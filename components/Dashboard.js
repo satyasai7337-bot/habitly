@@ -5,6 +5,7 @@ import HabitCard from "@/components/HabitCard";
 import AISuggestions from "@/components/AISuggestions";
 import ThoughtOfDay from "@/components/ThoughtOfDay";
 import Reminders from "@/components/Reminders";
+import Medications from "@/components/Medications";
 
 export default function Dashboard({ user }) {
   const [summary, setSummary] = useState(null);
@@ -80,6 +81,9 @@ export default function Dashboard({ user }) {
 
       {/* In-app reminders */}
       <Reminders onChanged={refresh} />
+
+      {/* Medications */}
+      <Medications />
 
       {/* AI */}
       <div className="mb-8">

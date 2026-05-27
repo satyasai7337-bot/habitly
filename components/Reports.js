@@ -25,6 +25,8 @@ export default function Reports() {
   const habits = data?.habits || [];
   const good = habits.filter((h) => h.type === "good");
   const bad = habits.filter((h) => h.type === "bad");
+  const meds = data?.meds;
+  const medList = meds?.perMed || [];
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -78,10 +80,63 @@ export default function Reports() {
         </section>
       )}
 
+      {!loading && medList.length > 0 && (
+        <section className="mb-10">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-xl font-bold text-ink">💊 Medication adherence</h2>
+            {meds.rate != null && (
+              <span
+                className={`pill ${meds.rate >= 80 ? "bg-good-soft text-good" : "bg-sand text-ink/60"}`}
+              >
+                {meds.taken}/{meds.scheduled} doses · {meds.rate}%
+              </span>
+            )}
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {medList.map((m) => (
+              <MedReportCard key={m.id} med={m} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {!loading && habits.length === 0 && (
         <p className="text-sm text-ink/50">No habits to report yet.</p>
       )}
     </main>
+  );
+}
+
+function MedReportCard({ med }) {
+  const good = med.rate >= 80;
+  return (
+    <div className="card p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">💊</span>
+          <h3 className="font-display font-bold text-ink">
+            {med.name}
+            {med.dosage && <span className="ml-1 text-sm font-normal text-ink/50">· {med.dosage}</span>}
+          </h3>
+        </div>
+        <span className={`font-display text-2xl font-extrabold ${good ? "text-good" : "text-ink"}`}>
+          {med.rate}%
+        </span>
+      </div>
+
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-sand">
+        <div
+          className="bar-fill h-full rounded-full"
+          style={{ width: `${med.rate}%`, backgroundColor: good ? "#3f8f5c" : "#c2554d" }}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        <Stat label="Taken" value={`${med.taken}/${med.scheduled}`} accent="good" />
+        <Stat label="Skipped" value={String(med.skipped)} />
+        <Stat label="Missed" value={String(med.missed)} accent={med.missed > 0 ? "bad" : "muted"} />
+      </div>
+    </div>
   );
 }
 

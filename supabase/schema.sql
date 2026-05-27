@@ -42,5 +42,33 @@ create table if not exists reminder_logs (
 );
 create index if not exists reminder_logs_user_date_idx on reminder_logs (user_id, date);
 
+-- User-defined medications and their daily dose schedule.
+create table if not exists medications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  name       text not null,
+  dosage     text default '',               -- e.g. "500 mg", "1 tablet"
+  times      jsonb not null default '[]'::jsonb,  -- ["08:00","20:00"] (local)
+  start_date text,                           -- "YYYY-MM-DD" or null (starts today)
+  end_date   text,                           -- "YYYY-MM-DD" or null (ongoing / course end)
+  notes      text default '',
+  active     boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists medications_user_idx on medications (user_id);
+
+-- One row per dose the user marked taken/skipped on a given day.
+create table if not exists medication_logs (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references users(id) on delete cascade,
+  medication_id uuid not null references medications(id) on delete cascade,
+  slot          text not null,              -- "HH:MM" dose time
+  date          text not null,              -- "YYYY-MM-DD"
+  status        text not null default 'taken', -- 'taken' | 'skipped'
+  taken_at      timestamptz not null default now(),
+  unique (user_id, medication_id, slot, date)
+);
+create index if not exists medication_logs_user_date_idx on medication_logs (user_id, date);
+
 -- Note: the app connects with the Supabase service role key and enforces access
 -- via its own JWT auth, so row-level security is intentionally left disabled.

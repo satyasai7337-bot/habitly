@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { getLogsByDates } from "@/lib/store";
-import { rangeForPeriod } from "@/lib/dates";
+import { getLogsByDates, getMedications, getMedicationLogsByDates } from "@/lib/store";
+import { rangeForPeriod, todayKey } from "@/lib/dates";
 import { aggregateByDate, buildSeries, adherence } from "@/lib/stats";
+import { medicationAdherence } from "@/lib/medications";
 
 export const runtime = "nodejs";
 
@@ -35,5 +36,22 @@ export async function GET(req) {
     };
   });
 
-  return NextResponse.json({ period, days: dayKeys.length, habits });
+  // Medication adherence over the same window. Wrapped so a missing
+  // medications table (before the migration is run) never breaks Reports.
+  let meds = { perMed: [], scheduled: 0, taken: 0, rate: null };
+  try {
+    const now = new Date();
+    const curSlot = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes()
+    ).padStart(2, "0")}`;
+    const [medications, medLogs] = await Promise.all([
+      getMedications(user.id),
+      getMedicationLogsByDates(user.id, dayKeys),
+    ]);
+    meds = medicationAdherence(medications, medLogs, dayKeys, todayKey(), curSlot);
+  } catch (e) {
+    console.error("medication adherence skipped:", e?.message || e);
+  }
+
+  return NextResponse.json({ period, days: dayKeys.length, habits, meds });
 }
