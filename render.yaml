@@ -18,5 +18,9 @@ services:
         generateValue: true # Render generates a secure random value
       - key: COOKIE_SECURE
         value: "true"
+      - key: GEMINI_API_KEY
+        sync: false # Google AI Studio key (optional; enables AI tips & meal ideas)
+      - key: GEMINI_MODEL
+        value: "gemini-2.5-flash"
       - key: NODE_VERSION
         value: "20"
