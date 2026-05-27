@@ -23,6 +23,7 @@ export default function SignupPage() {
   const [reminders, setReminders] = useState({}); // { habitKey: ["HH:MM", ...] }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function update(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -127,7 +128,29 @@ export default function SignupPage() {
               <Field label="Full name" name="name" value={form.name} onChange={update} required />
               <Field label="Phone number" name="phone" value={form.phone} onChange={update} type="tel" />
               <Field label="Email" name="email" value={form.email} onChange={update} type="email" required />
-              <Field label="Password" name="password" value={form.password} onChange={update} type="password" required hint="min 6 characters" />
+              <div>
+                <label className="label">
+                  Password <span className="font-normal text-ink/40">· min 6 characters</span>
+                </label>
+                <div className="relative">
+                  <input
+                    className="input pr-16"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={update}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-sm font-semibold text-ink/50 hover:text-ink"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
               <Field label="Body weight (kg)" name="bodyWeight" value={form.bodyWeight} onChange={update} type="number" />
               <Field label="Height (cm)" name="height" value={form.height} onChange={update} type="number" />
               <Field label="Age" name="age" value={form.age} onChange={update} type="number" />

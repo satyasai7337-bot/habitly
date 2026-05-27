@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function update(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -68,15 +69,25 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="label">Password</label>
-            <input
-              className="input"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={form.password}
-              onChange={update}
-              required
-            />
+            <div className="relative">
+              <input
+                className="input pr-16"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={form.password}
+                onChange={update}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-sm font-semibold text-ink/50 hover:text-ink"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
           <button className="btn-primary w-full py-3" disabled={loading}>
             {loading ? "Logging in…" : "Log in"}
