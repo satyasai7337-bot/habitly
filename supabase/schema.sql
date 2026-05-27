@@ -98,5 +98,28 @@ create table if not exists food_logs (
 );
 create index if not exists food_logs_user_date_idx on food_logs (user_id, date);
 
+-- Web Push subscriptions (one per browser/device the user enabled).
+create table if not exists push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  endpoint   text not null,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, endpoint)
+);
+create index if not exists push_subscriptions_user_idx on push_subscriptions (user_id);
+
+-- Dedup log so the scheduler sends each reminder push at most once per day.
+create table if not exists push_logs (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  tag        text not null,                 -- e.g. "habit:water:09:00" or "med:<id>:08:00"
+  date       text not null,                 -- "YYYY-MM-DD"
+  sent_at    timestamptz not null default now(),
+  unique (user_id, tag, date)
+);
+create index if not exists push_logs_user_date_idx on push_logs (user_id, date);
+
 -- Note: the app connects with the Supabase service role key and enforces access
 -- via its own JWT auth, so row-level security is intentionally left disabled.

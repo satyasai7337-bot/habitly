@@ -22,5 +22,13 @@ services:
         sync: false # Google AI Studio key (optional; enables AI tips & meal ideas)
       - key: GEMINI_MODEL
         value: "gemini-2.5-flash"
+      - key: VAPID_PUBLIC_KEY
+        sync: false # from `node scripts/gen-vapid.mjs` (same pair as private)
+      - key: VAPID_PRIVATE_KEY
+        sync: false # from `node scripts/gen-vapid.mjs`
+      - key: VAPID_SUBJECT
+        sync: false # e.g. mailto:you@example.com
+      - key: CRON_SECRET
+        generateValue: true # guards /api/push/run; copy into your cron job
       - key: NODE_VERSION
         value: "20"
