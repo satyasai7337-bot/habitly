@@ -6,6 +6,8 @@ import {
   Area,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -91,6 +93,56 @@ export function ReportBars({ data, target, direction, unit }) {
             ))}
           </Bar>
         </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// Weight-over-time line with a dashed goal line.
+export function WeightTrend({ data, goal }) {
+  const weights = data.map((d) => d.weight);
+  const lo = Math.min(...weights, goal ?? Infinity);
+  const hi = Math.max(...weights, goal ?? -Infinity);
+  const pad = Math.max(1, (hi - lo) * 0.15);
+
+  return (
+    <div className="h-56 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 12, left: -18, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="#efe9dd" />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11, fill: "#8a857a" }}
+            tickLine={false}
+            axisLine={{ stroke: "#e4ddcf" }}
+            interval="preserveStartEnd"
+            minTickGap={24}
+          />
+          <YAxis
+            domain={[Math.floor(lo - pad), Math.ceil(hi + pad)]}
+            tick={{ fontSize: 11, fill: "#8a857a" }}
+            tickLine={false}
+            axisLine={false}
+            width={42}
+          />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} kg`, "weight"]} />
+          {goal > 0 && (
+            <ReferenceLine
+              y={goal}
+              stroke="#3f8f5c"
+              strokeDasharray="4 4"
+              label={{ value: `goal ${goal}`, position: "right", fontSize: 10, fill: "#3f8f5c" }}
+            />
+          )}
+          <Line
+            type="monotone"
+            dataKey="weight"
+            stroke="#4a6fa5"
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: "#4a6fa5" }}
+            activeDot={{ r: 5 }}
+          />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );

@@ -13,9 +13,14 @@ create table if not exists users (
   height        numeric,
   age           integer,
   sex           text,
+  goal_weight   numeric,                      -- weight-loss target (kg)
+  goal_date     text,                          -- "YYYY-MM-DD" target date
   habits        jsonb not null default '[]'::jsonb,
   created_at    timestamptz not null default now()
 );
+-- If the users table already exists, add the new goal columns:
+alter table users add column if not exists goal_weight numeric;
+alter table users add column if not exists goal_date   text;
 
 create table if not exists habit_logs (
   id         uuid primary key default gen_random_uuid(),
@@ -69,6 +74,29 @@ create table if not exists medication_logs (
   unique (user_id, medication_id, slot, date)
 );
 create index if not exists medication_logs_user_date_idx on medication_logs (user_id, date);
+
+-- Daily body-weight entries for the weight-loss feature (one per day).
+create table if not exists weight_logs (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  date       text not null,                 -- "YYYY-MM-DD"
+  weight     numeric not null,              -- kg
+  created_at timestamptz not null default now(),
+  unique (user_id, date)
+);
+create index if not exists weight_logs_user_date_idx on weight_logs (user_id, date);
+
+-- Calorie / food intake entries (manual calorie logging).
+create table if not exists food_logs (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  date       text not null,                 -- "YYYY-MM-DD"
+  name       text default '',
+  calories   numeric not null,
+  meal       text default '',               -- breakfast | lunch | dinner | snack
+  created_at timestamptz not null default now()
+);
+create index if not exists food_logs_user_date_idx on food_logs (user_id, date);
 
 -- Note: the app connects with the Supabase service role key and enforces access
 -- via its own JWT auth, so row-level security is intentionally left disabled.

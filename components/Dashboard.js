@@ -6,6 +6,8 @@ import AISuggestions from "@/components/AISuggestions";
 import ThoughtOfDay from "@/components/ThoughtOfDay";
 import Reminders from "@/components/Reminders";
 import Medications from "@/components/Medications";
+import WeightLoss from "@/components/WeightLoss";
+import CalorieLog from "@/components/CalorieLog";
 
 export default function Dashboard({ user }) {
   const [summary, setSummary] = useState(null);
@@ -78,6 +80,12 @@ export default function Dashboard({ user }) {
 
       {/* Thought of the day */}
       <ThoughtOfDay />
+
+      {/* Weight-loss goal */}
+      <WeightLoss />
+
+      {/* Calorie intake */}
+      <CalorieLog />
 
       {/* In-app reminders */}
       <Reminders onChanged={refresh} />
