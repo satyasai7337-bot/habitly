@@ -11,9 +11,15 @@
 
 html,
 body {
-  background-color: #faf8f3;
-  color: #1c1b1a;
+  color: #2b2733;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Soft peach → lilac gradient, fixed so it covers the whole app. */
+body {
+  min-height: 100vh;
+  background: linear-gradient(140deg, #fdeae2 0%, #f7edf6 48%, #e9ddf4 100%);
+  background-attachment: fixed;
 }
 
 @layer components {
@@ -21,7 +27,7 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-ink text-cream hover:bg-black;
+    @apply btn bg-accent text-white hover:brightness-105;
   }
   .btn-good {
     @apply btn bg-good text-white hover:brightness-95;
@@ -33,7 +39,7 @@ body {
     @apply btn border border-line bg-transparent text-ink hover:bg-sand;
   }
   .card {
-    @apply rounded-3xl border border-line bg-white shadow-soft;
+    @apply rounded-3xl border border-white/70 bg-white/85 shadow-soft backdrop-blur-sm;
   }
   .input {
     @apply w-full rounded-2xl border border-line bg-white px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:border-ink/40 focus:ring-2 focus:ring-ink/10;

@@ -7,22 +7,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Plain, calm palette (no neon). Used app-wide.
-        ink: "#1c1b1a",        // near-black text
-        cream: "#faf8f3",      // warm off-white background
-        sand: "#f1ede4",       // soft card / panel
-        line: "#e4ddcf",       // subtle borders
+        // Soft, friendly health-tracker palette: violet accent on a warm
+        // peach→lilac gradient (background set in globals.css).
+        ink: "#2b2733",        // deep slate text
+        cream: "#fbf6f9",      // light base
+        sand: "#f3edfa",       // soft lilac panel / chips
+        line: "#ece6f4",       // subtle lilac borders
         good: {
-          DEFAULT: "#3f8f5c",  // muted green = healthy habits
-          soft: "#e7f1ea",
+          DEFAULT: "#3f9e6b",  // green = on track / clean
+          soft: "#e7f4ec",
         },
         bad: {
-          DEFAULT: "#c2554d",  // muted clay red = harmful habits
-          soft: "#f6e7e5",
+          DEFAULT: "#e0697a",  // coral = over / prevent
+          soft: "#fce8ec",
         },
         accent: {
-          DEFAULT: "#4a6fa5",  // calm slate blue
-          soft: "#e8eef6",
+          DEFAULT: "#8b5cf6",  // brand violet
+          soft: "#efe9fd",
         },
       },
       fontFamily: {
@@ -31,10 +32,10 @@ module.exports = {
       },
       borderRadius: {
         "2xl": "1.1rem",
-        "3xl": "1.6rem",
+        "3xl": "1.75rem",
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(28,27,26,0.04), 0 8px 24px rgba(28,27,26,0.06)",
+        soft: "0 4px 24px rgba(123,86,175,0.10), 0 1px 3px rgba(123,86,175,0.05)",
       },
     },
   },

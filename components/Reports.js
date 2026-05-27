@@ -29,7 +29,7 @@ export default function Reports() {
   const medList = meds?.perMed || [];
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">Reports</h1>
@@ -103,7 +103,7 @@ export default function Reports() {
       {!loading && habits.length === 0 && (
         <p className="text-sm text-ink/50">No habits to report yet.</p>
       )}
-    </main>
+    </div>
   );
 }
 

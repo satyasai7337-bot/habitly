@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
-import TopNav from "@/components/TopNav";
+import AppShell from "@/components/AppShell";
 import Dashboard from "@/components/Dashboard";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +10,8 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen bg-cream">
-      <TopNav name={user.name} />
+    <AppShell name={user.name}>
       <Dashboard user={user} />
-    </div>
+    </AppShell>
   );
 }

@@ -9,6 +9,7 @@ import Medications from "@/components/Medications";
 import WeightLoss from "@/components/WeightLoss";
 import CalorieLog from "@/components/CalorieLog";
 import EnableNotifications from "@/components/EnableNotifications";
+import TodayRing from "@/components/TodayRing";
 
 export default function Dashboard({ user }) {
   const [summary, setSummary] = useState(null);
@@ -62,22 +63,23 @@ export default function Dashboard({ user }) {
   const bad = habits.filter((h) => h.type === "bad");
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <div>
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
-            Hey {user.name.split(" ")[0]} 👋
+            Your day
           </h1>
-          <p className="text-sm text-ink/60">
-            {today ? `${today} · ` : ""}here&apos;s your day
-          </p>
+          <p className="text-sm text-ink/60">{today || "Today"}</p>
         </div>
         <div className="flex gap-3">
           <StatChip label="Next reminder" value={nextReminderText(summary?.nextReminder)} />
           <StatChip label="Reminders today" value={summary ? String(summary.totalRemindersSent) : "—"} />
         </div>
       </div>
+
+      {/* Today's calorie ring */}
+      <TodayRing />
 
       {/* Thought of the day */}
       <ThoughtOfDay />
@@ -135,7 +137,7 @@ export default function Dashboard({ user }) {
       {!loading && habits.length === 0 && (
         <p className="text-sm text-ink/50">No habits selected yet.</p>
       )}
-    </main>
+    </div>
   );
 }
 
