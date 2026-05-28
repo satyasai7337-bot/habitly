@@ -9,9 +9,10 @@ export const runtime = "nodejs";
 
 const MEALS = ["breakfast", "lunch", "dinner", "snack"];
 const DIETS = ["any", "vegetarian", "vegan", "non-veg", "high-protein"];
+const CUISINES = ["any", "indian", "mediterranean", "asian", "western"];
 
 // Suggest meal ideas for the calories the user has left today.
-// Body: { meal?, diet? }
+// Body: { meal?, diet?, cuisine? }
 export async function POST(req) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -19,6 +20,7 @@ export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const meal = MEALS.includes(body.meal) ? body.meal : "";
   const diet = DIETS.includes(body.diet) ? body.diet : "any";
+  const cuisine = CUISINES.includes(body.cuisine) ? body.cuisine : "any";
 
   const today = todayKey();
   const [entries, nutrition] = await Promise.all([
@@ -36,6 +38,8 @@ export async function POST(req) {
     remaining,
     meal,
     diet,
+    cuisine,
+    date: today,
     profile: { age: user.age, sex: user.sex },
   });
 

@@ -10,6 +10,13 @@ const DIETS = [
   ["non-veg", "Non-veg"],
   ["high-protein", "High-protein"],
 ];
+const CUISINES = [
+  ["indian", "Indian"],
+  ["any", "Any"],
+  ["mediterranean", "Mediterranean"],
+  ["asian", "Asian"],
+  ["western", "Western"],
+];
 
 export default function CalorieLog() {
   const [data, setData] = useState(null);
@@ -20,6 +27,7 @@ export default function CalorieLog() {
 
   // AI suggestion controls
   const [diet, setDiet] = useState("any");
+  const [cuisine, setCuisine] = useState("indian");
   const [suggestMeal, setSuggestMeal] = useState("");
   const [suggestions, setSuggestions] = useState(null);
   const [suggesting, setSuggesting] = useState(false);
@@ -73,7 +81,7 @@ export default function CalorieLog() {
       const res = await fetch("/api/ai/meals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ diet, meal: suggestMeal }),
+        body: JSON.stringify({ diet, cuisine, meal: suggestMeal }),
       });
       if (res.ok) setSuggestions(await res.json());
     } finally {
@@ -180,8 +188,13 @@ export default function CalorieLog() {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
-            <select value={diet} onChange={(e) => setDiet(e.target.value)} className="input w-36 py-1.5 text-sm">
+            <select value={diet} onChange={(e) => setDiet(e.target.value)} className="input w-32 py-1.5 text-sm">
               {DIETS.map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+            <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} className="input w-36 py-1.5 text-sm">
+              {CUISINES.map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
               ))}
             </select>
