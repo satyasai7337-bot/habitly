@@ -10,7 +10,7 @@ const NAV = [
   { href: "/certificate", label: "Certificate" },
 ];
 
-export default function Topbar({ name }) {
+export default function Topbar({ name, avatar }) {
   const pathname = usePathname();
   const first = (name || "there").split(" ")[0];
   const initial = (name || "U").charAt(0).toUpperCase();
@@ -35,9 +35,13 @@ export default function Topbar({ name }) {
         >
           🔔
         </span>
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-sm font-bold text-white shadow-soft">
-          {initial}
-        </div>
+        {avatar ? (
+          <img src={avatar} alt="" className="h-11 w-11 rounded-full object-cover shadow-soft" />
+        ) : (
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-sm font-bold text-white shadow-soft">
+            {initial}
+          </div>
+        )}
       </div>
 
       {/* Mobile nav (sidebar is hidden below md) */}

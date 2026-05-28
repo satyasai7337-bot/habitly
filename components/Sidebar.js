@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
+import AvatarUpload from "@/components/AvatarUpload";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
@@ -10,7 +11,7 @@ const NAV = [
   { href: "/certificate", label: "Certificate", icon: "🏆" },
 ];
 
-export default function Sidebar({ name }) {
+export default function Sidebar({ name, avatar }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -61,11 +62,10 @@ export default function Sidebar({ name }) {
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl bg-white/60 px-3 py-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-            {(name || "U").charAt(0).toUpperCase()}
-          </div>
+          <AvatarUpload name={name} avatar={avatar} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-ink">{name || "You"}</div>
+            <div className="text-xs text-ink/45">Tap photo to change</div>
           </div>
           <button
             onClick={logout}

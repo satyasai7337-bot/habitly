@@ -15,12 +15,14 @@ create table if not exists users (
   sex           text,
   goal_weight   numeric,                      -- weight-loss target (kg)
   goal_date     text,                          -- "YYYY-MM-DD" target date
+  avatar        text,                          -- profile picture as a data URL
   habits        jsonb not null default '[]'::jsonb,
   created_at    timestamptz not null default now()
 );
--- If the users table already exists, add the new goal columns:
+-- If the users table already exists, add the new columns:
 alter table users add column if not exists goal_weight numeric;
 alter table users add column if not exists goal_date   text;
+alter table users add column if not exists avatar      text;
 
 create table if not exists habit_logs (
   id         uuid primary key default gen_random_uuid(),

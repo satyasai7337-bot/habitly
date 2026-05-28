@@ -10,7 +10,7 @@ export default async function ReportsPage() {
   if (!user) redirect("/login");
 
   return (
-    <AppShell name={user.name}>
+    <AppShell name={user.name} avatar={user.avatar}>
       <Reports />
     </AppShell>
   );
