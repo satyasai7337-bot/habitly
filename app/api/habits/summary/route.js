@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getLogsByDates, countRemindersByHabitForDate } from "@/lib/store";
 import { lastNDays, todayKey } from "@/lib/dates";
-import { aggregateByDate, buildSeries, habitProgress, nextReminder } from "@/lib/stats";
+import { aggregateByDate, buildSeries, habitProgress, nextReminder, streak } from "@/lib/stats";
 
 export const runtime = "nodejs";
 
@@ -10,10 +10,12 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const days7 = lastNDays(7);
+  const days30 = lastNDays(30);
+  const days7 = days30.slice(-7);
   const today = todayKey();
 
-  const logs = await getLogsByDates(user.id, days7);
+  // Fetch 30 days once; reuse for series + streak.
+  const logs = await getLogsByDates(user.id, days30);
 
   // group logs by habit
   const byHabit = {};
@@ -31,6 +33,7 @@ export async function GET() {
       todayTotal,
       progress: habitProgress(h, todayTotal),
       series7: buildSeries(days7, map),
+      streak: streak(h, days30, map),
       remindersSent: h.type === "good" ? remByHabit[h.key] || 0 : null,
     };
   });

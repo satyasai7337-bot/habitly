@@ -6,8 +6,10 @@ import Brand from "@/components/Brand";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/vitals", label: "Vitals" },
   { href: "/reports", label: "Reports" },
-  { href: "/certificate", label: "Certificate" },
+  { href: "/export", label: "Summary" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export default function Topbar({ name, avatar }) {

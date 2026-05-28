@@ -125,5 +125,22 @@ create table if not exists push_logs (
 );
 create index if not exists push_logs_user_date_idx on push_logs (user_id, date);
 
+-- Vitals readings: glucose, blood pressure, mood (single flexible table).
+create table if not exists vital_logs (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  type       text not null,                 -- 'glucose' | 'bp' | 'mood'
+  date       text not null,                 -- "YYYY-MM-DD"
+  time       text default '',               -- "HH:MM" (optional)
+  value      numeric,                       -- glucose mg/dL, mood 1-5
+  systolic   numeric,                       -- BP only
+  diastolic  numeric,                       -- BP only
+  context    text default '',               -- e.g. 'fasting', 'post-meal'
+  note       text default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists vital_logs_user_date_idx on vital_logs (user_id, date);
+create index if not exists vital_logs_user_type_idx on vital_logs (user_id, type);
+
 -- Note: the app connects with the Supabase service role key and enforces access
 -- via its own JWT auth, so row-level security is intentionally left disabled.

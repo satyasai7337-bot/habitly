@@ -42,9 +42,14 @@ export default function HabitCard({ habit, onChanged, recommended }) {
           <span className="text-2xl">{habit.emoji}</span>
           <div>
             <h3 className="font-display font-bold leading-tight text-ink">{habit.label}</h3>
-            <span className={good ? "chip-good" : "chip-bad"}>
-              {good ? "good habit" : "prevent"}
-            </span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+              <span className={good ? "chip-good" : "chip-bad"}>
+                {good ? "good habit" : "prevent"}
+              </span>
+              {habit.streak > 0 && (
+                <span className="pill bg-accent-soft text-accent">🔥 {habit.streak}-day</span>
+              )}
+            </div>
           </div>
         </div>
         <button

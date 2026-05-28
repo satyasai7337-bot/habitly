@@ -7,8 +7,10 @@ import AvatarUpload from "@/components/AvatarUpload";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
+  { href: "/vitals", label: "Vitals", icon: "🩸" },
   { href: "/reports", label: "Reports", icon: "📈" },
-  { href: "/certificate", label: "Certificate", icon: "🏆" },
+  { href: "/export", label: "Doctor summary", icon: "🩺" },
+  { href: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
 export default function Sidebar({ name, avatar }) {
