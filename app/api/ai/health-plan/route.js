@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { setUserHealthPlan } from "@/lib/store";
+import { setUserHealthPlan, insertHealthPlanHistory } from "@/lib/store";
 import { analyzeMedicalReport } from "@/lib/ai";
 
 export const runtime = "nodejs";
@@ -51,6 +51,18 @@ export async function POST(req) {
     if (result.error) return NextResponse.json({ error: result.error }, { status: 502 });
 
     await setUserHealthPlan(user.id, result.plan);
+    // Append to history for lab trends. Don't fail the request if history insert
+    // throws (e.g. table not migrated yet).
+    try {
+      await insertHealthPlanHistory({
+        userId: user.id,
+        plan: result.plan,
+        labs: result.plan.labs || null,
+        reportDate: result.plan.reportDate || null,
+      });
+    } catch (e) {
+      console.error("health_plan_history insert skipped:", e?.message || e);
+    }
     return NextResponse.json({ plan: result.plan });
   } catch (err) {
     console.error("health-plan POST error:", err?.message || err);

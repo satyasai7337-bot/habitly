@@ -13,7 +13,7 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const today = todayKey();
+  const today = todayKey(user.timezone);
   const [entries, nutrition] = await Promise.all([
     getFoodLogsForDate(user.id, today),
     getUserNutrition(user),
@@ -44,7 +44,7 @@ export async function POST(req) {
     if (!Number.isFinite(calories) || calories <= 0 || calories > 5000) {
       return NextResponse.json({ error: "Enter calories between 1 and 5000." }, { status: 400 });
     }
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date)) ? body.date : todayKey();
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date)) ? body.date : todayKey(user.timezone);
     const meal = MEALS.includes(body.meal) ? body.meal : "";
     const name = typeof body.name === "string" ? body.name.trim().slice(0, 80) : "";
 

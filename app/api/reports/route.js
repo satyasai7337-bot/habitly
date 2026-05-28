@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getLogsByDates, getMedications, getMedicationLogsByDates } from "@/lib/store";
-import { rangeForPeriod, todayKey } from "@/lib/dates";
+import { rangeForPeriod, todayKey, currentSlot } from "@/lib/dates";
 import { aggregateByDate, buildSeries, adherence } from "@/lib/stats";
 import { medicationAdherence } from "@/lib/medications";
 
@@ -13,7 +13,7 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const period = searchParams.get("period") === "month" ? "month" : "week";
-  const dayKeys = rangeForPeriod(period);
+  const dayKeys = rangeForPeriod(period, user.timezone);
 
   const logs = await getLogsByDates(user.id, dayKeys);
 
@@ -40,15 +40,12 @@ export async function GET(req) {
   // medications table (before the migration is run) never breaks Reports.
   let meds = { perMed: [], scheduled: 0, taken: 0, rate: null };
   try {
-    const now = new Date();
-    const curSlot = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
+    const curSlot = currentSlot(user.timezone);
     const [medications, medLogs] = await Promise.all([
       getMedications(user.id),
       getMedicationLogsByDates(user.id, dayKeys),
     ]);
-    meds = medicationAdherence(medications, medLogs, dayKeys, todayKey(), curSlot);
+    meds = medicationAdherence(medications, medLogs, dayKeys, todayKey(user.timezone), curSlot);
   } catch (e) {
     console.error("medication adherence skipped:", e?.message || e);
   }

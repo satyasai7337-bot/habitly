@@ -48,7 +48,7 @@ export async function POST(req) {
     if (!Number.isFinite(weight) || weight <= 0 || weight > 500) {
       return NextResponse.json({ error: "Enter a valid weight in kg." }, { status: 400 });
     }
-    const today = todayKey();
+    const today = todayKey(user.timezone);
     const date = DATE_RE.test(String(body.date)) ? body.date : today;
 
     await upsertWeightLog({ userId: user.id, date, weight });
@@ -79,7 +79,7 @@ export async function PATCH(req) {
     if (!Number.isFinite(goalWeight) || goalWeight <= 0 || goalWeight > 500) {
       return NextResponse.json({ error: "Enter a valid goal weight." }, { status: 400 });
     }
-    if (!DATE_RE.test(String(body.goalDate)) || body.goalDate <= todayKey()) {
+    if (!DATE_RE.test(String(body.goalDate)) || body.goalDate <= todayKey(user.timezone)) {
       return NextResponse.json({ error: "Pick a target date in the future." }, { status: 400 });
     }
 

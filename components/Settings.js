@@ -29,7 +29,12 @@ function ProfileForm({ user, onSaved }) {
     sex: user.sex || "",
     bodyWeight: user.bodyWeight ?? "",
     height: user.height ?? "",
+    timezone: user.timezone || "UTC",
   });
+  const tzList = (() => {
+    try { return Intl.supportedValuesOf("timeZone"); }
+    catch { return ["UTC","Asia/Kolkata","America/Los_Angeles","America/New_York","Europe/London","Asia/Tokyo","Australia/Sydney"]; }
+  })();
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -68,6 +73,12 @@ function ProfileForm({ user, onSaved }) {
         </div>
         <Field label="Body weight (kg)" name="bodyWeight" value={form.bodyWeight} onChange={up} type="number" />
         <Field label="Height (cm)" name="height" value={form.height} onChange={up} type="number" />
+        <div className="sm:col-span-2">
+          <label className="label">Timezone <span className="font-normal text-ink/40">· used for &quot;today&quot; on logs, reminders &amp; reports</span></label>
+          <select name="timezone" value={form.timezone} onChange={up} className="input">
+            {tzList.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
         <div className="sm:col-span-2 flex items-center justify-end gap-3">
           {msg && <span className="text-sm text-ink/65">{msg}</span>}
           <button disabled={saving} className="btn-primary px-5 py-2">{saving ? "Saving…" : "Save profile"}</button>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getLogsByDates, getReminderLogsForDate, insertReminderLogs } from "@/lib/store";
-import { todayKey } from "@/lib/dates";
+import { todayKey, currentSlot } from "@/lib/dates";
 import { aggregateByDate } from "@/lib/stats";
 
 export const runtime = "nodejs";
@@ -13,11 +13,8 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const today = todayKey();
-  const now = new Date();
-  const curSlot = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
+  const today = todayKey(user.timezone);
+  const curSlot = currentSlot(user.timezone);
 
   // Today's logged totals per habit.
   const logs = await getLogsByDates(user.id, [today]);

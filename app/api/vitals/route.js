@@ -17,7 +17,7 @@ export async function GET() {
   const all = await getVitalLogs(user.id, { limit: 200 });
   const byType = { glucose: [], bp: [], mood: [] };
   for (const v of all) (byType[v.type] ||= []).push(v);
-  return NextResponse.json({ vitals: byType, today: todayKey() });
+  return NextResponse.json({ vitals: byType, today: todayKey(user.timezone) });
 }
 
 // POST: add a vital reading.
@@ -31,7 +31,7 @@ export async function POST(req) {
     if (!TYPES.includes(body.type)) {
       return NextResponse.json({ error: "Unknown vital type." }, { status: 400 });
     }
-    const date = DATE_RE.test(String(body.date)) ? body.date : todayKey();
+    const date = DATE_RE.test(String(body.date)) ? body.date : todayKey(user.timezone);
     const time = TIME_RE.test(String(body.time)) ? body.time : "";
     const note = typeof body.note === "string" ? body.note.trim().slice(0, 280) : "";
 

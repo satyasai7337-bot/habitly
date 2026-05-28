@@ -17,7 +17,7 @@ export async function POST(req) {
     if (!medicationId || !TIME_RE.test(String(slot))) {
       return NextResponse.json({ error: "Missing medication or invalid time." }, { status: 400 });
     }
-    const day = DATE_RE.test(String(date)) ? date : todayKey();
+    const day = DATE_RE.test(String(date)) ? date : todayKey(user.timezone);
 
     if (status === "pending") {
       await clearMedicationDose({ userId: user.id, medicationId, slot, date: day });

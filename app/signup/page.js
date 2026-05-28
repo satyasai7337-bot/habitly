@@ -84,10 +84,14 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
+      const tz = (() => {
+        try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; }
+        catch { return "UTC"; }
+      })();
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, habits: selected, reminders }),
+        body: JSON.stringify({ ...form, tz, habits: selected, reminders }),
       });
       const data = await res.json();
       if (!res.ok) {

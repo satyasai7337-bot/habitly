@@ -7,15 +7,10 @@ import {
   deleteMedication,
   getMedicationLogsForDate,
 } from "@/lib/store";
-import { todayKey } from "@/lib/dates";
+import { todayKey, currentSlot } from "@/lib/dates";
 import { buildSchedule, normalizeTimes, DATE_RE } from "@/lib/medications";
 
 export const runtime = "nodejs";
-
-function currentSlot() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
 
 function str(v, max) {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -30,7 +25,7 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const today = todayKey();
+  const today = todayKey(user.timezone);
   const [meds, logs] = await Promise.all([
     getMedications(user.id),
     getMedicationLogsForDate(user.id, today),
@@ -40,7 +35,7 @@ export async function GET() {
     medications: meds,
     schedule: buildSchedule(meds, logs, today),
     date: today,
-    serverSlot: currentSlot(),
+    serverSlot: currentSlot(user.timezone),
   });
 }
 

@@ -11,6 +11,7 @@ import CalorieLog from "@/components/CalorieLog";
 import EnableNotifications from "@/components/EnableNotifications";
 import TodayRing from "@/components/TodayRing";
 import HealthPlan from "@/components/HealthPlan";
+import LabTrends from "@/components/LabTrends";
 import Insights from "@/components/Insights";
 
 export default function Dashboard({ user }) {
@@ -88,6 +89,9 @@ export default function Dashboard({ user }) {
 
       {/* AI-generated plan from a medical report */}
       <HealthPlan />
+
+      {/* Trend of lab values across multiple uploaded reports */}
+      <LabTrends />
 
       {/* Thought of the day */}
       <ThoughtOfDay />

@@ -22,7 +22,7 @@ export async function POST(req) {
   const diet = DIETS.includes(body.diet) ? body.diet : "any";
   const cuisine = CUISINES.includes(body.cuisine) ? body.cuisine : "any";
 
-  const today = todayKey();
+  const today = todayKey(user.timezone);
   const [entries, nutrition] = await Promise.all([
     getFoodLogsForDate(user.id, today),
     getUserNutrition(user),

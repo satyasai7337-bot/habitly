@@ -10,9 +10,9 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const days30 = lastNDays(30);
+  const days30 = lastNDays(30, user.timezone);
   const days7 = days30.slice(-7);
-  const today = todayKey();
+  const today = todayKey(user.timezone);
 
   // Fetch 30 days once; reuse for series + streak.
   const logs = await getLogsByDates(user.id, days30);

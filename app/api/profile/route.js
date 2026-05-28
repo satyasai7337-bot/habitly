@@ -34,6 +34,15 @@ export async function PATCH(req) {
     if (body.sex !== undefined) {
       fields.sex = ["male", "female", "other"].includes(body.sex) ? body.sex : null;
     }
+    if (body.timezone !== undefined) {
+      const tz = String(body.timezone || "UTC");
+      try {
+        new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+        fields.timezone = tz;
+      } catch {
+        return NextResponse.json({ error: "Unknown timezone." }, { status: 400 });
+      }
+    }
 
     const updated = await updateUserProfile(user.id, fields);
     return NextResponse.json({ user: sanitizeUser(updated) });

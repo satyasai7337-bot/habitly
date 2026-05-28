@@ -18,6 +18,7 @@ export async function POST(req) {
       height,
       age,
       sex,
+      tz, // IANA timezone from the browser (e.g. "Asia/Kolkata")
       habits, // array of habit keys
       reminders, // optional { habitKey: ["HH:MM", ...] } for good habits
     } = body;
@@ -80,6 +81,12 @@ export async function POST(req) {
 
     const passwordHash = await hashPassword(password);
 
+    // Validate the timezone string by attempting to format with it.
+    let timezone = "UTC";
+    if (typeof tz === "string" && tz.length <= 64) {
+      try { new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date()); timezone = tz; } catch {}
+    }
+
     const user = await createUser({
       name,
       phone,
@@ -89,6 +96,7 @@ export async function POST(req) {
       height: heightNum,
       age: ageNum,
       sex: sexVal,
+      timezone,
       habits: habitConfigs,
     });
 

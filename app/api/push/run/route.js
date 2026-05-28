@@ -7,7 +7,7 @@ import {
   claimPushTag,
 } from "@/lib/store";
 import { buildSchedule } from "@/lib/medications";
-import { todayKey } from "@/lib/dates";
+import { todayKey, currentSlot } from "@/lib/dates";
 import { sendToAll, pushConfigured } from "@/lib/push";
 
 export const runtime = "nodejs";
@@ -27,17 +27,6 @@ export async function POST(req) {
     return NextResponse.json({ error: "Push not configured" }, { status: 503 });
   }
 
-  const now = new Date();
-  const curMin = now.getHours() * 60 + now.getMinutes();
-  const curSlot = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  const today = todayKey();
-
-  const freshlyDue = (slot) => {
-    const [h, m] = slot.split(":").map(Number);
-    const diff = curMin - (h * 60 + m);
-    return diff >= 0 && diff <= WINDOW_MIN;
-  };
-
   const byUser = await getAllPushSubscriptions();
   let users = 0;
   let sent = 0;
@@ -46,6 +35,18 @@ export async function POST(req) {
     const user = await getUserById(userId);
     if (!user) continue;
     users++;
+
+    // Compute today/now in *this user's* timezone so push fires when their
+    // 09:00 lands locally, not when the server's 09:00 does.
+    const today = todayKey(user.timezone);
+    const slotNow = currentSlot(user.timezone);
+    const [nh, nm] = slotNow.split(":").map(Number);
+    const curMin = nh * 60 + nm;
+    const freshlyDue = (slot) => {
+      const [h, m] = slot.split(":").map(Number);
+      const diff = curMin - (h * 60 + m);
+      return diff >= 0 && diff <= WINDOW_MIN;
+    };
 
     // Good-habit reminders.
     for (const h of user.habits || []) {
@@ -83,5 +84,5 @@ export async function POST(req) {
     }
   }
 
-  return NextResponse.json({ ok: true, users, sent, serverSlot: curSlot });
+  return NextResponse.json({ ok: true, users, sent });
 }

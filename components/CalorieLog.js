@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const MEALS = ["breakfast", "lunch", "dinner", "snack"];
 const DIETS = [
@@ -31,6 +31,11 @@ export default function CalorieLog() {
   const [suggestMeal, setSuggestMeal] = useState("");
   const [suggestions, setSuggestions] = useState(null);
   const [suggesting, setSuggesting] = useState(false);
+
+  // Photo-meal logging
+  const photoRef = useRef(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [photoHint, setPhotoHint] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -72,6 +77,28 @@ export default function CalorieLog() {
   async function del(id) {
     await fetch(`/api/food?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     await load();
+  }
+
+  async function onPhotoPicked(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAnalyzing(true); setPhotoHint("Analyzing photo…");
+    try {
+      const fd = new FormData();
+      fd.append("photo", file);
+      const res = await fetch("/api/ai/meal-photo", { method: "POST", body: fd });
+      const d = await res.json();
+      if (res.ok && d.meal) {
+        setName(d.meal.name);
+        setCals(String(d.meal.calories));
+        setPhotoHint(`AI estimate (${d.meal.confidence} confidence)${d.meal.note ? " · " + d.meal.note : ""} — review and tap Add.`);
+      } else {
+        setPhotoHint(d.error || "Couldn't analyze the photo.");
+      }
+    } finally {
+      setAnalyzing(false);
+      if (photoRef.current) photoRef.current.value = "";
+    }
   }
 
   async function suggest() {
@@ -173,10 +200,21 @@ export default function CalorieLog() {
             placeholder="kcal"
             className="input w-24 py-2"
           />
+          <button
+            type="button"
+            onClick={() => photoRef.current?.click()}
+            disabled={analyzing}
+            className="btn-outline px-3 py-2"
+            title="Estimate calories from a meal photo"
+          >
+            {analyzing ? "…" : "📷 Photo"}
+          </button>
+          <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoPicked} />
           <button disabled={busy || cals === ""} className="btn-primary px-4 py-2">
             Add
           </button>
         </form>
+        {photoHint && <p className="text-xs text-ink/55">{photoHint}</p>}
 
         {/* AI meal suggestions */}
         <div className="rounded-2xl bg-accent-soft/40 p-3">

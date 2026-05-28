@@ -156,6 +156,32 @@ function Settings({ habit, good, recommended, onChanged, close }) {
   const [newTime, setNewTime] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Backfill: log an amount for a previous day.
+  const [bfDate, setBfDate] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [bfValue, setBfValue] = useState("");
+  const [bfMsg, setBfMsg] = useState("");
+  async function backfill() {
+    const v = Number(bfValue);
+    if (!Number.isFinite(v) || v === 0) return;
+    setBfMsg("");
+    const res = await fetch("/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitKey: habit.key, value: v, date: bfDate }),
+    });
+    if (res.ok) {
+      setBfMsg(`Logged ${v} ${habit.unit} for ${bfDate}.`);
+      setBfValue("");
+      onChanged?.();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setBfMsg(d.error || "Couldn't log.");
+    }
+  }
+
   function addTime() {
     if (/^([01]\d|2[0-3]):[0-5]\d$/.test(newTime) && !times.includes(newTime)) {
       setTimes((t) => [...t, newTime].sort());
@@ -239,6 +265,31 @@ function Settings({ habit, good, recommended, onChanged, close }) {
           </div>
         </>
       )}
+
+      <div className="rounded-2xl bg-white px-3 py-2">
+        <div className="mb-1 text-xs font-semibold text-ink/55">📅 Log a past day</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={bfDate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setBfDate(e.target.value)}
+            className="input py-1.5 text-sm"
+          />
+          <input
+            type="number"
+            step="any"
+            value={bfValue}
+            onChange={(e) => setBfValue(e.target.value)}
+            placeholder={habit.unit}
+            className="input w-24 py-1.5 text-sm"
+          />
+          <button type="button" onClick={backfill} disabled={!bfValue} className="btn-ghost px-3 py-1.5 text-sm">
+            Log
+          </button>
+        </div>
+        {bfMsg && <div className="mt-1 text-xs text-ink/55">{bfMsg}</div>}
+      </div>
 
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={close} className="btn-outline px-4 py-1.5">

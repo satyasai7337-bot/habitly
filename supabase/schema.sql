@@ -17,6 +17,7 @@ create table if not exists users (
   goal_date     text,                          -- "YYYY-MM-DD" target date
   avatar        text,                          -- profile picture as a data URL
   health_plan   jsonb,                          -- latest AI plan from a medical report
+  timezone      text default 'UTC',             -- IANA tz, e.g. 'Asia/Kolkata'
   habits        jsonb not null default '[]'::jsonb,
   created_at    timestamptz not null default now()
 );
@@ -25,6 +26,7 @@ alter table users add column if not exists goal_weight numeric;
 alter table users add column if not exists goal_date   text;
 alter table users add column if not exists avatar      text;
 alter table users add column if not exists health_plan jsonb;
+alter table users add column if not exists timezone    text default 'UTC';
 
 create table if not exists habit_logs (
   id         uuid primary key default gen_random_uuid(),
@@ -141,6 +143,17 @@ create table if not exists vital_logs (
 );
 create index if not exists vital_logs_user_date_idx on vital_logs (user_id, date);
 create index if not exists vital_logs_user_type_idx on vital_logs (user_id, type);
+
+-- One row per medical report a user uploads (latest is mirrored on users.health_plan).
+create table if not exists health_plan_history (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references users(id) on delete cascade,
+  plan        jsonb not null,                -- the full structured plan
+  labs        jsonb,                         -- extracted numeric labs for trends
+  report_date text,                          -- "YYYY-MM-DD" from the report header (if any)
+  created_at  timestamptz not null default now()
+);
+create index if not exists health_plan_history_user_idx on health_plan_history (user_id);
 
 -- Note: the app connects with the Supabase service role key and enforces access
 -- via its own JWT auth, so row-level security is intentionally left disabled.
