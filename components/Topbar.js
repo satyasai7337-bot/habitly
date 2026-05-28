@@ -1,19 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import Brand from "@/components/Brand";
 
-const NAV = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/vitals", label: "Vitals" },
-  { href: "/reports", label: "Reports" },
-  { href: "/export", label: "Summary" },
-  { href: "/settings", label: "Settings" },
-];
-
 export default function Topbar({ name, avatar }) {
-  const pathname = usePathname();
   const first = (name || "there").split(" ")[0];
   const initial = (name || "U").charAt(0).toUpperCase();
 
@@ -46,23 +36,7 @@ export default function Topbar({ name, avatar }) {
         )}
       </div>
 
-      {/* Mobile nav (sidebar is hidden below md) */}
-      <nav className="mt-3 flex gap-2 overflow-x-auto md:hidden">
-        {NAV.map((n) => {
-          const active = pathname === n.href;
-          return (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                active ? "bg-accent text-white" : "bg-white/70 text-ink/70"
-              }`}
-            >
-              {n.label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Mobile nav lives in the BottomNav now; nothing extra here. */}
     </header>
   );
 }

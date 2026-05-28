@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Brand from "@/components/Brand";
+import Hero3DClient from "@/components/Hero3DClient";
 import { GOOD_HABITS, BAD_HABITS } from "@/lib/habits";
 
 // Marketing landing page. The site root (/) goes straight to login; this page
 // is kept reachable at /welcome.
 export default function WelcomePage() {
   return (
-    <main className="min-h-screen bg-cream">
+    <main className="min-h-screen">
       {/* Nav */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5">
         <Brand size="lg" />
@@ -48,8 +49,8 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          {/* Mock dashboard preview */}
-          <HeroPreview />
+          {/* Animated 3D hero */}
+          <Hero3DClient />
         </div>
       </section>
 
