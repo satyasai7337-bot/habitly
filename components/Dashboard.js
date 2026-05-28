@@ -10,6 +10,7 @@ import WeightLoss from "@/components/WeightLoss";
 import CalorieLog from "@/components/CalorieLog";
 import EnableNotifications from "@/components/EnableNotifications";
 import TodayRing from "@/components/TodayRing";
+import HealthPlan from "@/components/HealthPlan";
 
 export default function Dashboard({ user }) {
   const [summary, setSummary] = useState(null);
@@ -80,6 +81,9 @@ export default function Dashboard({ user }) {
 
       {/* Today's calorie ring */}
       <TodayRing />
+
+      {/* AI-generated plan from a medical report */}
+      <HealthPlan />
 
       {/* Thought of the day */}
       <ThoughtOfDay />
